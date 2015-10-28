@@ -9,6 +9,7 @@ import pandas as pd
 import numpy as np
 import math
 import scipy.stats as ss
+import scipy.special as sp
 
 file_location="c:/Users/Terry/Documents/Data/comex.GC_141006_151006(1min).csv"
 test=pd.read_csv(file_location)
@@ -104,8 +105,16 @@ rolling_size=1 # rolling wondow size in terms of how many volume bars
 vpin=list(pd.rolling_sum((buy_sell_vspread),rolling_size)/pd.rolling_sum(buy_sell.total,rolling_size))
 rstd=pd.rolling_std(last_price,rolling_size)
 
-### calculate the cdf vpin
-#vpin_selected=vpin[0:vpin.index(max(vpin))+1]
+## calculate the cdf vpin
+vpin_selected=vpin[0:vpin.index(max(vpin))+1]
+def cdf(x):
+    miu=np.mean(vpin_selected)
+    sigma=np.std(vpin_selected)
+    cdf=0.5*(1+sp.erf((x-miu)/(2**0.5)/sigma))
+    return (cdf)
+    
+cdf_vpin=[cdf(i) for i in vpin_selected]
+
 #sorted_vpin=np.sort(vpin_selected)
 #yvals=1.*np.arange(len(sorted_vpin))/(len(sorted_vpin)-1)
 #index=sorted(range(len(vpin_selected)),key=lambda x:vpin_selected[x])
@@ -132,6 +141,7 @@ a=[float(i) for i in a]
 
 fig,ax1=plt.subplots()
 ax1.plot(vpin,color='red',label='VPIN')
+ax1.plot(cdf_vpin,'--',color='brown')
 ax1.set_ylabel('VPIN',color='red',fontsize=18)
 ax1.set_xticks(a,minor=False)
 ax1.set_xticklabels(b, rotation=60)
